@@ -2,6 +2,14 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>Vladimir Horbovanu</Authors>
+    <Company>Codexcite SA de CV</Company>
+    <Description>Library for "live reloading" XAML pages in Xamarin.Forms on Android, UWP and iOS.
+To be used together with the Codexcite.Reloader.Monitor.
+</Description>
+    <PackageProjectUrl>https://github.com/vladhorby/Codexcite.Reloader</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/vladhorby/Codexcite.Reloader</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
