@@ -9,8 +9,9 @@ namespace Codexcite.Reloader.Sample.App
 	{
 		public App()
 		{
+			#if DEBUG
 			Reloader.Forms.Reloader.Init("http://192.168.1.12:5500");
-
+			#endif
 			InitializeComponent();
 
 			MainPage = new NavigationPage(new MainPage());
