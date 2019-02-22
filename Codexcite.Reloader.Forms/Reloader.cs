@@ -2,12 +2,15 @@
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Client;
+using Polly;
+using Polly.Retry;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
@@ -18,6 +21,14 @@ namespace Codexcite.Reloader.Forms
 		private const string HubPath = "/reloadhub";
 		private static CancellationTokenSource _reloaderCancellationTokenSource;
 
+		private static readonly AsyncRetryPolicy RetryPolicy = Policy
+			.Handle<Exception>()
+			.WaitAndRetryForeverAsync(
+				retryAttempt => TimeSpan.FromSeconds(5),    
+				(exception, timespan) =>
+				{
+					Debug.WriteLine($"Reloader: Disconnected '{exception.Message}' Time: '{timespan}'. Retrying to connect.");     
+				});
 		public static void Stop()
 		{
 			_reloaderCancellationTokenSource?.Cancel();
@@ -39,11 +50,10 @@ namespace Codexcite.Reloader.Forms
 
 			connection.Closed += async (error) =>
 			{
-				Debug.WriteLine($"Reloader: Disconnected '{error.Message}'.");
+				Debug.WriteLine($"Reloader: Disconnected '{error.Message}'. Retrying...");
 				if (!_reloaderCancellationTokenSource.IsCancellationRequested)
 				{
-					await Task.Delay(new Random().Next(0, 5) * 1000);
-					await connection.StartAsync();
+					await RetryPolicy.ExecuteAsync(()=> connection.StartAsync()).ConfigureAwait(false);
 				}
 			};
 
@@ -71,7 +81,12 @@ namespace Codexcite.Reloader.Forms
 							contentPage.Content = null;
 							contentPage.LoadFromXaml(xaml);
 							ReassignNamedElements(contentPage);
-							
+							// using Xamarin.Forms internal methods; must fire both in order to get the ReactiveUI WhenActivated to be called
+							contentPage.SendDisappearing();
+							contentPage.SendAppearing();
+							// second option, using reflection to raise the events
+							//contentPage.Raise(typeof(Page), nameof(Page.Disappearing), EventArgs.Empty);
+							//contentPage.Raise(typeof(Page), nameof(Page.Appearing), EventArgs.Empty);
 						});
 
 					}
