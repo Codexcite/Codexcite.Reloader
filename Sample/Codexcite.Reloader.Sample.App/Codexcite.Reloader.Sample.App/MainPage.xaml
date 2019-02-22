@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:Codexcite.Reloader.Sample.App"
+             x:Class="Codexcite.Reloader.Sample.App.MainPage"
+             
+             >
+	<!--<ContentPage.BindingContext>
+		<local:MainViewModel></local:MainViewModel>
+	</ContentPage.BindingContext>-->
+	<StackLayout>
+		<!-- Place new controls here -->
+		<Label Text="Welcome to Xamarin.Forms!qsxzzzzea " 
+           HorizontalOptions="Center" BackgroundColor="BlanchedAlmond" TextColor="Crimson"
+           VerticalOptions="CenterAndExpand" />
+		<Label Text="{Binding Path=InstanceCount}" 
+               HorizontalOptions="Center" 
+               VerticalOptions="CenterAndExpand" />
+		<ListView ItemsSource="{Binding Path=Values}"></ListView>
+		<Label x:Name="LabelCount" Text="Count here" 
+           HorizontalOptions="Center"
+           VerticalOptions="CenterAndExpand" />
+		<Button Text="Count increment" Clicked="Button_OnClicked" CornerRadius="30"></Button>
+		<Button Text="Second page" Command="{Binding Path=GoToSecond}"></Button>
+	</StackLayout>
+
+</ContentPage>
