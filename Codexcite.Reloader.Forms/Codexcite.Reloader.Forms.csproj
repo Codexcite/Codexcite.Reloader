@@ -10,6 +10,11 @@ To be used together with the Codexcite.Reloader.Monitor.
 </Description>
     <PackageProjectUrl>https://github.com/vladhorby/Codexcite.Reloader</PackageProjectUrl>
     <RepositoryUrl>https://github.com/vladhorby/Codexcite.Reloader</RepositoryUrl>
+    <!--<PackageLicenseUrl>https://github.com/vladhorby/Codexcite.Reloader/blob/master/LICENSE</PackageLicenseUrl>-->
+    <Copyright>2019 Vladimir Horbovanu</Copyright>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageTags>Xamarin, Xamarin.Forms, Xaml, SignalR, LiveReload</PackageTags>
+	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
