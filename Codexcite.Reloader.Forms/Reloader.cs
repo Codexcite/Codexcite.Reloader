@@ -20,6 +20,7 @@ namespace Codexcite.Reloader.Forms
 		private static CancellationTokenSource _reloaderCancellationTokenSource;
 		private static readonly Dictionary<string, string> _cachedUpdatedPages = new Dictionary<string, string>();
 		private static bool _isManuallyReappearing = false;
+		private static string AppClass;
 
 		private static readonly AsyncRetryPolicy RetryPolicy = Policy
 			.Handle<Exception>()
@@ -39,6 +40,8 @@ namespace Codexcite.Reloader.Forms
 
 		public static void Init(string url)
 		{
+			AppClass = Application.Current.GetType().FullName;
+
 			if (!Uri.IsWellFormedUriString(url, UriKind.Absolute))
 				throw new ArgumentException("The url must be a valid absolute url address", nameof(url));
 			var fullUrl = new Uri(new Uri(url, UriKind.Absolute), HubPath);
@@ -68,18 +71,24 @@ namespace Codexcite.Reloader.Forms
 
 				var xaml = Encoding.UTF8.GetString(contents);
 
+				var xamlClass = xaml.ExtractClassName();
+				Debug.WriteLine($"Reloader: Received xaml for '{xamlClass}'.'");
+				UpdateCachedPage(xamlClass, xaml);
 
-				if (_currentPage != null && _currentPage is ContentPage contentPage)
+				if (AppClass == xamlClass)
 				{
-					var xamlClass = xaml.ExtractClassName();
+					Device.BeginInvokeOnMainThread(() =>
+					{
+						Debug.WriteLine($"Reloader: Updating the App.xaml resources.'");
+						Application.Current.Resources.Clear();
+						Application.Current.LoadFromXaml(xaml);
+					});
+				}
+				else if (_currentPage != null && _currentPage is ContentPage contentPage)
+				{
 					var currentPageClass = _currentPage.GetType().FullName;
-					Debug.WriteLine($"Reloader: Received xaml for '{xamlClass}'. Current page is '{currentPageClass}.'");
-
-					UpdateCachedPage(xamlClass, xaml);
-
 					if (xamlClass == currentPageClass)
 						UpdatePageXaml(contentPage, xaml);
-
 				}
 			});
 

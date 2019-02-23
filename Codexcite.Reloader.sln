@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.421
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codexcite.Reloader.Monitor", "Codexcite.Reloader.Monitor\Codexcite.Reloader.Monitor.csproj", "{2298CB3C-2ADD-4B2A-8646-7A895E156BC7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Codexcite.Reloader.Monitor", "Codexcite.Reloader.Monitor\Codexcite.Reloader.Monitor.csproj", "{2298CB3C-2ADD-4B2A-8646-7A895E156BC7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codexcite.Reloader.Forms", "Codexcite.Reloader.Forms\Codexcite.Reloader.Forms.csproj", "{4112E772-7B06-44DB-9D47-8428D7C5124B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Codexcite.Reloader.Forms", "Codexcite.Reloader.Forms\Codexcite.Reloader.Forms.csproj", "{4112E772-7B06-44DB-9D47-8428D7C5124B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codexcite.Reloader.Sample.App.Android", "Sample\Codexcite.Reloader.Sample.App\Codexcite.Reloader.Sample.App.Android\Codexcite.Reloader.Sample.App.Android.csproj", "{80D172C6-68A6-4A09-8BB7-C53206C55F46}"
 EndProject
@@ -13,7 +13,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codexcite.Reloader.Sample.A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codexcite.Reloader.Sample.App.UWP", "Sample\Codexcite.Reloader.Sample.App\Codexcite.Reloader.Sample.App.UWP\Codexcite.Reloader.Sample.App.UWP.csproj", "{F9B166E9-C463-4A58-9C3C-D432F1ACB29C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codexcite.Reloader.Sample.App", "Sample\Codexcite.Reloader.Sample.App\Codexcite.Reloader.Sample.App\Codexcite.Reloader.Sample.App.csproj", "{E022B9BB-E168-45BB-B8DE-2E740094F295}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Codexcite.Reloader.Sample.App", "Sample\Codexcite.Reloader.Sample.App\Codexcite.Reloader.Sample.App\Codexcite.Reloader.Sample.App.csproj", "{E022B9BB-E168-45BB-B8DE-2E740094F295}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B91139F5-AAA8-4560-9CE0-058558AC3D06}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
