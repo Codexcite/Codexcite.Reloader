@@ -2,12 +2,10 @@
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Client;
 using Polly;
 using Polly.Retry;
@@ -20,15 +18,20 @@ namespace Codexcite.Reloader.Forms
 	{
 		private const string HubPath = "/reloadhub";
 		private static CancellationTokenSource _reloaderCancellationTokenSource;
+		private static readonly Dictionary<string, string> _cachedUpdatedPages = new Dictionary<string, string>();
+		private static bool _isManuallyReappearing = false;
 
 		private static readonly AsyncRetryPolicy RetryPolicy = Policy
 			.Handle<Exception>()
 			.WaitAndRetryForeverAsync(
-				retryAttempt => TimeSpan.FromSeconds(5),    
+				retryAttempt => TimeSpan.FromSeconds(5),
 				(exception, timespan) =>
 				{
-					Debug.WriteLine($"Reloader: Disconnected '{exception.Message}' Time: '{timespan}'. Retrying to connect.");     
+					Debug.WriteLine($"Reloader: Disconnected '{exception.Message}' Time: '{timespan}'. Retrying to connect.");
 				});
+
+		private static Page _currentPage;
+
 		public static void Stop()
 		{
 			_reloaderCancellationTokenSource?.Cancel();
@@ -48,22 +51,21 @@ namespace Codexcite.Reloader.Forms
 				.WithUrl(fullUrl)
 				.Build();
 
-			connection.Closed += async (error) =>
+			connection.Closed += async error =>
 			{
 				Debug.WriteLine($"Reloader: Disconnected '{error.Message}'. Retrying...");
 				if (!_reloaderCancellationTokenSource.IsCancellationRequested)
-				{
-					await RetryPolicy.ExecuteAsync(()=> connection.StartAsync()).ConfigureAwait(false);
-				}
+					await RetryPolicy.ExecuteAsync(() => connection.StartAsync()).ConfigureAwait(false);
 			};
 
-			connection.On<byte[]>("ReloadXaml", (contents) =>
+			connection.On<byte[]>("ReloadXaml", contents =>
 			{
 				if (contents == null)
 				{
 					Debug.WriteLine("Reloader: Received empty content.");
 					return;
 				}
+
 				var xaml = Encoding.UTF8.GetString(contents);
 
 
@@ -72,24 +74,12 @@ namespace Codexcite.Reloader.Forms
 					var xamlClass = xaml.ExtractClassName();
 					var currentPageClass = _currentPage.GetType().FullName;
 					Debug.WriteLine($"Reloader: Received xaml for '{xamlClass}'. Current page is '{currentPageClass}.'");
+
+					UpdateCachedPage(xamlClass, xaml);
+
 					if (xamlClass == currentPageClass)
-					{
-						Device.BeginInvokeOnMainThread(() =>
-						{
-							Debug.WriteLine($"Reloader: Updating current page '{currentPageClass}'.'");
+						UpdatePageXaml(contentPage, xaml);
 
-							contentPage.Content = null;
-							contentPage.LoadFromXaml(xaml);
-							ReassignNamedElements(contentPage);
-							// using Xamarin.Forms internal methods; must fire both in order to get the ReactiveUI WhenActivated to be called
-							contentPage.SendDisappearing();
-							contentPage.SendAppearing();
-							// second option, using reflection to raise the events
-							//contentPage.Raise(typeof(Page), nameof(Page.Disappearing), EventArgs.Empty);
-							//contentPage.Raise(typeof(Page), nameof(Page.Appearing), EventArgs.Empty);
-						});
-
-					}
 				}
 			});
 
@@ -98,7 +88,33 @@ namespace Codexcite.Reloader.Forms
 
 			var task = connection.StartAsync(_reloaderCancellationTokenSource.Token);
 			Debug.WriteLine($"Reloader: Connected to '{fullUrl}'.");
+		}
 
+		private static void UpdatePageXaml(ContentPage contentPage, string xaml)
+		{
+			Device.BeginInvokeOnMainThread(() =>
+			{
+				Debug.WriteLine($"Reloader: Updating current page '{_currentPage.GetType().FullName}'.'");
+
+				contentPage.Content = null;
+				contentPage.LoadFromXaml(xaml);
+				ReassignNamedElements(contentPage);
+				try
+				{
+					_isManuallyReappearing = true;
+					// using Xamarin.Forms internal methods; must fire both in order to get the ReactiveUI WhenActivated to be called
+					contentPage.SendDisappearing();
+					contentPage.SendAppearing();
+					// second option, using reflection to raise the events
+					//contentPage.Raise(typeof(Page), nameof(Page.Disappearing), EventArgs.Empty);
+					//contentPage.Raise(typeof(Page), nameof(Page.Appearing), EventArgs.Empty);
+
+				}
+				finally
+				{
+					_isManuallyReappearing = false;
+				}
+			});
 		}
 
 		private static void ReassignNamedElements(Element element)
@@ -114,10 +130,25 @@ namespace Codexcite.Reloader.Forms
 			}
 		}
 
-		private static Page _currentPage = null;
 		private static void ApplicationOnPageAppearing(object sender, Page e)
 		{
 			_currentPage = e is NavigationPage navigationPage ? navigationPage.CurrentPage : e;
+			if (!_isManuallyReappearing)
+			{
+				var updatedXaml = GetCachedPageXaml(_currentPage.GetType().FullName);
+				if (updatedXaml != null && _currentPage is ContentPage contentPage)
+					UpdatePageXaml(contentPage, updatedXaml);
+			}
+		}
+
+		private static void UpdateCachedPage(string className, string xaml)
+		{
+			_cachedUpdatedPages[className] = xaml;
+		}
+
+		private static string GetCachedPageXaml(string className)
+		{
+			return _cachedUpdatedPages.ContainsKey(className) ? _cachedUpdatedPages[className] : null;
 		}
 	}
 }

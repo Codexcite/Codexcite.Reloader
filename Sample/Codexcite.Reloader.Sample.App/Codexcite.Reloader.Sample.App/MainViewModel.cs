@@ -17,7 +17,7 @@ namespace Codexcite.Reloader.Sample.App
 		}
 
 		public ICommand GoToSecond { get; }
-		public string[] Values => new[] {"Uno", "Due", "Tri", "Citiri"};
+		public string[] Values => new[] {"Uno", "Dos", "Tres", "Cuatro"};
 		public int InstanceCount => _instanceCount;
 	}
 }
