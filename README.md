@@ -51,9 +51,10 @@ public App()
 ### Remarks
 * Tested on UWP and Android so far, but it should work on iOS too.
 * The Xaml updating is pretty basic so far:
-  * Only handles updates for the current page, ignores updates for other pages.
+  * ~~Only handles updates for the current page, ignores updates for other pages.~~
   * Navigating back keeps the changes to the previous page. Page1 (original) -> Page1 (modified) -> Page2 ->back-> Page1 (modified)
-  * Navigating operations that recreate pages will load the original versions of those pages. Page1 -> Page2 (original) -> Page2 (modified) ->back-> Page1 -> Page2 (original)
+  * ~~Navigating operations that recreate pages will load the original versions of those pages. Page1 -> Page2 (original) -> Page2 (modified) ->back-> Page1 -> Page2 (original)~~
+  * __UPDATE 1.0.1 Now handling updates to other pages and caching the updated xaml for future reuse.__
   * Upon updating the xaml for the page, the Page.Dissapearing and Page.Appearing events are forced triggered, so any initial setup code you have in the page code behind can be run again. Worked well with ReactiveUI WhenActivated.
   * Only handled the NavigationPage with ContentPages case so far, still pending for other Page types.
 
