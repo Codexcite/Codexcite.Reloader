@@ -18,6 +18,7 @@ To be used together with the Codexcite.Reloader.Monitor.
 	  <AssemblyVersion>1.0.1.0</AssemblyVersion>
 	  <PackageReleaseNotes>1.0.1
 Updating all pages, not just the current one. Latest page xaml is cached and used for future page navigation.</PackageReleaseNotes>
+	  <Version>1.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>

@@ -10,6 +10,7 @@ namespace Codexcite.Reloader.Sample.App
 		public App()
 		{
 			#if DEBUG
+			// TODO: Update the url with your ip and port
 			Reloader.Forms.Reloader.Init("http://192.168.1.12:5500");
 			#endif
 			InitializeComponent();
