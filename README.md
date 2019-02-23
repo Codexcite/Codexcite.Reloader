@@ -57,7 +57,7 @@ public App()
   * __UPDATE 1.0.1 Now handling updates to other pages and caching the updated xaml for future reuse.__
   * Upon updating the xaml for the page, the Page.Dissapearing and Page.Appearing events are forced triggered, so any initial setup code you have in the page code behind can be run again. Worked well with ReactiveUI WhenActivated.
   * Only handled the NavigationPage with ContentPages case so far, still pending for other Page types.
-	* __UPDATE 1.0.2 Now also handling updates for the App.xaml Resources, like control styles.__
+  * __UPDATE 1.0.2 Now also handling updates for the App.xaml Resources, like control styles.__
 
 ### License
 The MIT License (MIT) see [License file](LICENSE)
