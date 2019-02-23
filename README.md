@@ -3,6 +3,8 @@
 Lightweight library for "live reloading" XAML pages in Xamarin.Forms on Android, UWP and iOS.
 Allows simultaneous updating of multiple connected clients - great if you need to see the impact of your changes instantly on different platforms.
 
+![Sample GIF](Extra/Screenshots/simultaneous_xaml_example.gif?raw=true)
+
 Similar to Xamarin LiveReload that unfortunately was discontinued and stopped working for me after updating to Xamarin.Forms 3.5.
 
 ## Usage
@@ -58,6 +60,7 @@ public App()
   * Upon updating the xaml for the page, the Page.Dissapearing and Page.Appearing events are forced triggered, so any initial setup code you have in the page code behind can be run again. Worked well with ReactiveUI WhenActivated.
   * Only handled the NavigationPage with ContentPages case so far, still pending for other Page types.
   * __UPDATE 1.0.2 Now also handling updates for the App.xaml Resources, like control styles.__
+  ![Sample GIF](Extra/Screenshots/app.xaml_example.gif?raw=true)
 
 ### License
 The MIT License (MIT) see [License file](LICENSE)
