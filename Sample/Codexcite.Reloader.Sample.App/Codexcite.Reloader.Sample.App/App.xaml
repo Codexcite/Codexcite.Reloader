@@ -5,6 +5,7 @@
 	<Application.Resources>
 		<Style TargetType="Button">
 			<Setter Property="CornerRadius" Value="10"></Setter>
+			<Setter Property="BackgroundColor" Value="Silver"></Setter>
 		</Style>
 	</Application.Resources>
 </Application>
