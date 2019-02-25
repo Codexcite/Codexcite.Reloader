@@ -3,22 +3,23 @@
 Lightweight library for "live reloading" XAML pages in Xamarin.Forms on Android, UWP and iOS.
 Allows simultaneous updating of multiple connected clients - great if you need to see the impact of your changes instantly on different platforms.
 
+![Sample GIF](Extra/Screenshots/simultaneous_xaml_example.gif?raw=true)
+
 Similar to Xamarin LiveReload that unfortunately was discontinued and stopped working for me after updating to Xamarin.Forms 3.5.
 
 ## Usage
 
 ### Codexcite.Reloader.Monitor 
 
-Acts as a SignalR server and monitors a specific folder (and sub-folders) for changes to .xaml files. Sends update notifications to the connected clients upon file changes.
+Acts as a TCP server and monitors a specific folder (and sub-folders) for changes to .xaml files. Sends update notifications to the connected clients upon file changes.
 * Download and build the project
 * Open command line at the Codexcite.Reloader.Monitor\bin\[platform] location
 * Run the program
 ```
-dotnet .\Codexcite.Reloader.Monitor.dll -path [PATH] -url [URL] -host [HOST] -port [PORT]
+dotnet .\Codexcite.Reloader.Monitor.dll -path [PATH] -host [HOST] -port [PORT]
 ```
 #### Parameters:
 * -path : the folder containing the .xaml files to be monitored. Default: Environment.CurrentDirectory
-* -url : the url where the SignalR server will be run. If set, -host and -port are ignored. 
 * -host : the IP address for the SignalR server. Default: the first available internal network IP address.
 * -port : the port number for the SignalR server. Default: 5500.
 
@@ -37,7 +38,7 @@ Runs inside the Xamarin.Forms app, connects to the Codexcite.Reloader.Monitor se
 public App()
 {
 #if DEBUG
-  Reloader.Forms.Reloader.Init("http://[your local ip here]:5500");
+  Reloader.Forms.Reloader.Init("[your local ip here]", 5500);
 #endif
 
   // normal initialization here
@@ -58,6 +59,8 @@ public App()
   * Upon updating the xaml for the page, the Page.Dissapearing and Page.Appearing events are forced triggered, so any initial setup code you have in the page code behind can be run again. Worked well with ReactiveUI WhenActivated.
   * Only handled the NavigationPage with ContentPages case so far, still pending for other Page types.
   * __UPDATE 1.0.2 Now also handling updates for the App.xaml Resources, like control styles.__
+  ![Sample GIF](Extra/Screenshots/app.xaml_example.gif?raw=true)
+  * __UPDATE 1.1.0 Removed dependency on SignalR, using a simple TcpListener / TcpClient connection now.__
 
 ### License
 The MIT License (MIT) see [License file](LICENSE)
