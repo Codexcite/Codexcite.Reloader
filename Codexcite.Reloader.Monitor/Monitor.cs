@@ -10,11 +10,11 @@ using Polly.Retry;
 
 namespace Codexcite.Reloader.Monitor
 {
-	public class Program
+	public class Monitor
 	{
 		private static readonly string[] SupportedFileExtensions = { "xaml" };
 
-		private static readonly AsyncRetryPolicy<string> RetryPolicy = Policy<string>
+		private static readonly AsyncRetryPolicy<string> AsyncRetryPolicy = Policy<string>
 			.Handle<IOException>()
 			.WaitAndRetryAsync(new[]
 			{
@@ -22,31 +22,30 @@ namespace Codexcite.Reloader.Monitor
 				TimeSpan.FromMilliseconds(200),
 				TimeSpan.FromMilliseconds(300),
 			});
+		private static readonly RetryPolicy<string> RetryPolicy = Policy<string>
+			.Handle<IOException>()
+			.WaitAndRetry(new[]
+			{
+				TimeSpan.FromMilliseconds(100),
+				TimeSpan.FromMilliseconds(200),
+				TimeSpan.FromMilliseconds(300),
+			});
+		private Server _server;
 
-		private static Server _server;
-
-		public static void Main(string[] args)
+		public bool Start(string path, string host, int port)
 		{
-			var path = args.GetCommandLineArgument("-path", Environment.CurrentDirectory);
-			var host = args.GetCommandLineArgument("-host", null) ?? GetDefaultPrivateNetworkIp();
-			int.TryParse(args.GetCommandLineArgument("-port", "5500"), out int port);
-
-			Console.WriteLine($"Starting host on '{host}:{port}'.");
+			var actualHost = host ?? GetDefaultPrivateNetworkIp();
+			Console.WriteLine($"Starting host on '{actualHost}:{port}'.");
 			_server = new Server();
-			_server.Start(host, port);
+			var serverStarted = _server.Start(actualHost, port);
 
-			Console.WriteLine($"Running on '{host}:{port}'.");
+			Console.WriteLine($"Running on '{actualHost}:{port}'.");
 
 			var fileMonitorObservable = GetFileMonitorObservable(path);
-			if (fileMonitorObservable == null)
-				return;
+				fileMonitorObservable?.Subscribe(SendFileUpdate);
 
-			fileMonitorObservable.Subscribe(SendFileUpdate);
-
-			do
-			{
-
-			} while (true);
+			var fileMonitorStarted = fileMonitorObservable != null;
+			return fileMonitorStarted && serverStarted;
 		}
 
 		private static string GetDefaultPrivateNetworkIp()
@@ -104,12 +103,12 @@ namespace Codexcite.Reloader.Monitor
 			return result?.Throttle(TimeSpan.FromMilliseconds(100));
 		}
 
-		private static async void SendFileUpdate(string filePath)
+		private async void SendFileUpdate(string filePath)
 		{
 			Console.WriteLine($"{DateTime.Now:HH:mm:ss.fff} - File updated: '{filePath}'");
 			try
 			{
-				string fileContent = await RetryPolicy.ExecuteAsync(() => File.ReadAllTextAsync(filePath));
+				string fileContent = RetryPolicy.Execute(() => File.ReadAllText(filePath));
 
 				if (fileContent.Length == 0)
 				{

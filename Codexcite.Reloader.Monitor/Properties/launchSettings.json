@@ -1,8 +1,7 @@
 {
   "profiles": {
     "Codexcite.Reloader.Monitor": {
-      "commandName": "Project",
-      "commandLineArgs": "-path d:\\Code\\Codexcite.Reloader\\Sample\\Codexcite.Reloader.Sample.App\\Codexcite.Reloader.Sample.App\\"
+      "commandName": "Project"
     }
   }
 }
