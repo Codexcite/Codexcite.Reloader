@@ -15,18 +15,21 @@ To be used together with the Codexcite.Reloader.Monitor.
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageTags>Xamarin, Xamarin.Forms, Xaml, SignalR, LiveReload</PackageTags>
 	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
-	  <AssemblyVersion>1.0.2.0</AssemblyVersion>
-	  <PackageReleaseNotes>1.0.2
+	  <AssemblyVersion>1.1.0.0</AssemblyVersion>
+	  <PackageReleaseNotes>1.1.0
+Removed dependency on SignalR, using a simple TcpListener / TcpClient connection now.
+
+1.0.2
 Now also handling updates for the App.xaml Resources, like control styles.
 
 1.0.1
 Updating all pages, not just the current one. Latest page xaml is cached and used for future page navigation.</PackageReleaseNotes>
-	  <Version>1.0.2</Version>
+	  <Version>1.1.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="1.1.0" />
     <PackageReference Include="Polly" Version="7.0.3" />
+    <PackageReference Include="System.Reactive" Version="4.1.3" />
     <PackageReference Include="Xamarin.Forms" Version="3.5.0.169047" />
   </ItemGroup>
 

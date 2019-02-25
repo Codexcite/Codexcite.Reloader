@@ -4,12 +4,7 @@ using System.Linq;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Reactive.Linq;
-using System.Security.Permissions;
 using System.Text;
-using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.DependencyInjection;
 using Polly;
 using Polly.Retry;
 
@@ -18,7 +13,6 @@ namespace Codexcite.Reloader.Monitor
 	public class Program
 	{
 		private static readonly string[] SupportedFileExtensions = { "xaml" };
-		private static IWebHost _webHost;
 
 		private static readonly AsyncRetryPolicy<string> RetryPolicy = Policy<string>
 			.Handle<IOException>()
@@ -29,40 +23,41 @@ namespace Codexcite.Reloader.Monitor
 				TimeSpan.FromMilliseconds(300),
 			});
 
-		[PermissionSet(SecurityAction.Demand, Name = "FullTrust")]
+		private static Server _server;
+
 		public static void Main(string[] args)
 		{
 			var path = args.GetCommandLineArgument("-path", Environment.CurrentDirectory);
+			var host = args.GetCommandLineArgument("-host", null) ?? GetDefaultPrivateNetworkIp();
+			int.TryParse(args.GetCommandLineArgument("-port", "5500"), out int port);
 
-			var fileMonitorObservable = GetFileMonitorObservable(path); 
-			if (fileMonitorObservable == null)	
+			Console.WriteLine($"Starting host on '{host}:{port}'.");
+			_server = new Server();
+			_server.Start(host, port);
+
+			Console.WriteLine($"Running on '{host}:{port}'.");
+
+			var fileMonitorObservable = GetFileMonitorObservable(path);
+			if (fileMonitorObservable == null)
 				return;
 
 			fileMonitorObservable.Subscribe(SendFileUpdate);
 
-			var url = args.GetCommandLineArgument("-url", null);
-			if (url == null)
+			do
 			{
-				var host = args.GetCommandLineArgument("-host", null) ?? GetDefaultPrivateNetworkIp();
-				var port = args.GetCommandLineArgument("-port", "5500");
-				url = $"http://{host}:{port}";
-			}
-			Console.WriteLine($"Starting host on '{url}'.");
-			_webHost = CreateWebHostBuilder(args).UseUrls(url).Build();
-			_webHost.Run();
-			Console.WriteLine($"Running on '{url}'.");
 
+			} while (true);
 		}
 
 		private static string GetDefaultPrivateNetworkIp()
 		{
 			return NetworkInterface
-				       .GetAllNetworkInterfaces()
-				       .SelectMany(x => x.GetIPProperties().UnicastAddresses)
-				       .Where(x=> x.SuffixOrigin != SuffixOrigin.LinkLayerAddress && 
-				                  x.Address.AddressFamily == AddressFamily.InterNetwork)
-				       .Select(x => x.Address.MapToIPv4())
-				       .FirstOrDefault(x => x.ToString() != "127.0.0.1")?.ToString() ?? "127.0.0.1";
+							 .GetAllNetworkInterfaces()
+							 .SelectMany(x => x.GetIPProperties().UnicastAddresses)
+							 .Where(x => x.SuffixOrigin != SuffixOrigin.LinkLayerAddress &&
+													x.Address.AddressFamily == AddressFamily.InterNetwork)
+							 .Select(x => x.Address.MapToIPv4())
+							 .FirstOrDefault(x => x.ToString() != "127.0.0.1")?.ToString() ?? "127.0.0.1";
 		}
 
 		private static IObservable<string> GetFileMonitorObservable(string path)
@@ -81,10 +76,10 @@ namespace Codexcite.Reloader.Monitor
 				{
 					Path = path,
 					NotifyFilter = NotifyFilters.LastWrite |
-					               NotifyFilters.Attributes |
-					               NotifyFilters.Size |
-					               NotifyFilters.CreationTime |
-					               NotifyFilters.FileName,
+												 NotifyFilters.Attributes |
+												 NotifyFilters.Size |
+												 NotifyFilters.CreationTime |
+												 NotifyFilters.FileName,
 					Filter = $"*.{fileExtension}",
 					EnableRaisingEvents = true,
 					IncludeSubdirectories = true
@@ -109,12 +104,6 @@ namespace Codexcite.Reloader.Monitor
 			return result?.Throttle(TimeSpan.FromMilliseconds(100));
 		}
 
-		public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
-			WebHost.CreateDefaultBuilder(args)
-				.UseStartup<Startup>();
-
-		
-
 		private static async void SendFileUpdate(string filePath)
 		{
 			Console.WriteLine($"{DateTime.Now:HH:mm:ss.fff} - File updated: '{filePath}'");
@@ -134,10 +123,8 @@ namespace Codexcite.Reloader.Monitor
 					Console.WriteLine($"Empty file");
 					return;
 				}
-				var hubContext = _webHost.Services
-					.GetRequiredService<IHubContext<ReloadHub>>();
 				Console.WriteLine($"Sending: {data.Length} bytes from file '{filePath}'.");
-				await hubContext.Clients.All.SendAsync("ReloadXaml", data).ConfigureAwait(false);
+				await _server.SendMessageToAllAsync(data);
 			}
 			catch (Exception e)
 			{

@@ -3,12 +3,10 @@ using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
-using Microsoft.AspNetCore.SignalR.Client;
-using Polly;
-using Polly.Retry;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
@@ -16,87 +14,75 @@ namespace Codexcite.Reloader.Forms
 {
 	public static class Reloader
 	{
-		private const string HubPath = "/reloadhub";
 		private static CancellationTokenSource _reloaderCancellationTokenSource;
 		private static readonly Dictionary<string, string> _cachedUpdatedPages = new Dictionary<string, string>();
 		private static bool _isManuallyReappearing = false;
 		private static string AppClass;
 
-		private static readonly AsyncRetryPolicy RetryPolicy = Policy
-			.Handle<Exception>()
-			.WaitAndRetryForeverAsync(
-				retryAttempt => TimeSpan.FromSeconds(5),
-				(exception, timespan) =>
-				{
-					Debug.WriteLine($"Reloader: Disconnected '{exception.Message}' Time: '{timespan}'. Retrying to connect.");
-				});
-
 		private static Page _currentPage;
+		private static Client _client;
 
 		public static void Stop()
 		{
 			_reloaderCancellationTokenSource?.Cancel();
 		}
 
-		public static void Init(string url)
+		public static void Init(string host, int port)
 		{
 			AppClass = Application.Current.GetType().FullName;
 
-			if (!Uri.IsWellFormedUriString(url, UriKind.Absolute))
-				throw new ArgumentException("The url must be a valid absolute url address", nameof(url));
-			var fullUrl = new Uri(new Uri(url, UriKind.Absolute), HubPath);
-
 			_reloaderCancellationTokenSource = new CancellationTokenSource();
-
-			Debug.WriteLine($"Reloader: Connecting to '{fullUrl}'.");
-
-			var connection = new HubConnectionBuilder()
-				.WithUrl(fullUrl)
-				.Build();
-
-			connection.Closed += async error =>
-			{
-				Debug.WriteLine($"Reloader: Disconnected '{error.Message}'. Retrying...");
-				if (!_reloaderCancellationTokenSource.IsCancellationRequested)
-					await RetryPolicy.ExecuteAsync(() => connection.StartAsync()).ConfigureAwait(false);
-			};
-
-			connection.On<byte[]>("ReloadXaml", contents =>
-			{
-				if (contents == null)
-				{
-					Debug.WriteLine("Reloader: Received empty content.");
-					return;
-				}
-
-				var xaml = Encoding.UTF8.GetString(contents);
-
-				var xamlClass = xaml.ExtractClassName();
-				Debug.WriteLine($"Reloader: Received xaml for '{xamlClass}'.'");
-				UpdateCachedPage(xamlClass, xaml);
-
-				if (AppClass == xamlClass)
-				{
-					Device.BeginInvokeOnMainThread(() =>
-					{
-						Debug.WriteLine($"Reloader: Updating the App.xaml resources.'");
-						Application.Current.Resources.Clear();
-						Application.Current.LoadFromXaml(xaml);
-					});
-				}
-				else if (_currentPage != null && _currentPage is ContentPage contentPage)
-				{
-					var currentPageClass = _currentPage.GetType().FullName;
-					if (xamlClass == currentPageClass)
-						UpdatePageXaml(contentPage, xaml);
-				}
-			});
-
 			Application.Current.PageAppearing += ApplicationOnPageAppearing;
 
+			Debug.WriteLine($"Reloader: Connecting to '{host}:{port}'.");
 
-			var task = connection.StartAsync(_reloaderCancellationTokenSource.Token);
-			Debug.WriteLine($"Reloader: Connected to '{fullUrl}'.");
+			_client = new Client(host, port, true);
+
+			Observable.FromAsync(_client.ReadMessage)
+				.Repeat()
+				.TakeUntil(x => x == null)
+				.Subscribe(HandleReceivedXaml);
+
+		}
+
+		private static void HandleReceivedXaml(byte[] contents)
+		{
+			if (contents == null)
+			{
+				Debug.WriteLine("Reloader: Received empty content.");
+				return;
+			}
+
+			var xaml = Encoding.UTF8.GetString(contents);
+			HandleReceivedXaml(xaml);
+		}
+	
+
+		private static void HandleReceivedXaml(string xaml)
+		{
+			if (string.IsNullOrEmpty(xaml))
+			{
+				Debug.WriteLine("Reloader: Received empty xaml.");
+				return;
+			}
+			var xamlClass = xaml.ExtractClassName();
+			Debug.WriteLine($"Reloader: Received xaml for '{xamlClass}'.'");
+			UpdateCachedPage(xamlClass, xaml);
+
+			if (AppClass == xamlClass)
+			{
+				Device.BeginInvokeOnMainThread(() =>
+				{
+					Debug.WriteLine($"Reloader: Updating the App.xaml resources.'");
+					Application.Current.Resources.Clear();
+					Application.Current.LoadFromXaml(xaml);
+				});
+			}
+			else if (_currentPage != null && _currentPage is ContentPage contentPage)
+			{
+				var currentPageClass = _currentPage.GetType().FullName;
+				if (xamlClass == currentPageClass) UpdatePageXaml(contentPage, xaml);
+			}
 		}
 
 		private static void UpdatePageXaml(ContentPage contentPage, string xaml)
