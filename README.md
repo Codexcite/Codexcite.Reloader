@@ -11,7 +11,8 @@ Similar to Xamarin LiveReload that unfortunately was discontinued and stopped wo
 
 ### Codexcite.Reloader.Monitor 
 
-Acts as a TCP server and monitors a specific folder (and sub-folders) for changes to .xaml files. Sends update notifications to the connected clients upon file changes.
+Acts as a TCP server and monitors a specific folder (and sub-folders) for changes to .xaml files. Sends update notifications to the connected clients upon file changes. 
+__Update: now Visual Studio extension available, check below for details.__
 * Download and build the project
 * Open command line at the Codexcite.Reloader.Monitor\bin\[platform] location
 * Run the program
@@ -61,6 +62,17 @@ public App()
   * __UPDATE 1.0.2 Now also handling updates for the App.xaml Resources, like control styles.__
   ![Sample GIF](Extra/Screenshots/app.xaml_example.gif?raw=true)
   * __UPDATE 1.1.0 Removed dependency on SignalR, using a simple TcpListener / TcpClient connection now.__
+
+### Reload Monitor Visual Studio extension
+* Download the [.vsix](Extra/VSIX/Codexcite.Reloader.Monitor.VSIX.vsix?raw=true) file or download and build the .VSIX project.
+* Install in Visual Studio
+* (Optional) [Enable the Reload Monitor toolbar](Extra/Screenshots/VS_enable_toolbar.jpg?raw=true)
+* Start the Reloader Monitor from the [Tools menu option](Extra/Screenshots/VS_tools_menu.jpg?raw=true) or from the [Toolbar option](Extra/Screenshots/VS_toolbar_button.jpg?raw=true).
+* Select the path to the .xaml files to be monitored. Choose your server IP and port. 
+![Start dialog](Extra/Screenshots/VS_start_dialog.jpg?raw=true)
+* Click "Start". You'll be able to see notifications about client connections in the Output -> Debug window. 
+![Output window](Extra/Screenshots/VS_output_window.jpg?raw=true)
+* Run your apps, making sure you use the same IP and port for Reloader.Init().
 
 ### License
 The MIT License (MIT) see [License file](LICENSE)
