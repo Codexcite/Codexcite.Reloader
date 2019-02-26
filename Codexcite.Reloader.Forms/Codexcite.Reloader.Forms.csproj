@@ -13,7 +13,7 @@ To be used together with the Codexcite.Reloader.Monitor.
     <!--<PackageLicenseUrl>https://github.com/vladhorby/Codexcite.Reloader/blob/master/LICENSE</PackageLicenseUrl>-->
     <Copyright>2019 Vladimir Horbovanu</Copyright>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <PackageTags>Xamarin, Xamarin.Forms, Xaml, SignalR, LiveReload</PackageTags>
+    <PackageTags>Xamarin, Xamarin.Forms, Xaml, LiveReload</PackageTags>
 	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
 	  <AssemblyVersion>1.2.1.0</AssemblyVersion>
 	  <PackageReleaseNotes>1.2.1
@@ -31,6 +31,7 @@ Now also handling updates for the App.xaml Resources, like control styles.
 1.0.1
 Updating all pages, not just the current one. Latest page xaml is cached and used for future page navigation.</PackageReleaseNotes>
 	  <Version>1.2.1</Version>
+	  <PackageLicenseUrl></PackageLicenseUrl>
   </PropertyGroup>
 
   <ItemGroup>
