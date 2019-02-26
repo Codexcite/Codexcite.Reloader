@@ -30,9 +30,9 @@ Runs inside the Xamarin.Forms app, connects to the Codexcite.Reloader.Monitor se
 
 * Download and build the project
 * Reference the project or the resulting .dll in your Xamarin.Forms .Net Standard project. Or, use the nuget [Codexcite.Reloader.Forms](http://www.nuget.org/packages/Codexcite.Reloader.Forms) [![NuGet](https://img.shields.io/nuget/v/Codexcite.Reloader.Forms.svg?label=NuGet)](https://www.nuget.org/packages/Codexcite.Reloader.Forms) 
-* Recommended to use a condition with your project reference
+* Recommended to use a Debug condition with your project reference
 ```
-<ProjectReference Include="..\..\..\Codexcite.Reloader.Forms\Codexcite.Reloader.Forms.csproj" Condition="'$(Configuration)'=='Debug'" />
+<ProjectReference Condition="'$(Configuration)'=='Debug'" Include="..\..\..\Codexcite.Reloader.Forms\Codexcite.Reloader.Forms.csproj" />
 ```
 * Initialize the Reloader in your Xamarin.Forms.Application, using the same url that you configured for the Codexcite.Reloader.Monitor.
 ```csharp
