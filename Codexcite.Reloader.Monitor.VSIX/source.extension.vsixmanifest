@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="Codexcite.Reloader.Monitor.VSIX.8fc9a4b2-5cca-40ca-9c70-29a16578e0b6" Version="1.2.0" Language="en-US" Publisher="Vladimir Horbovanu" />
+        <Identity Id="Codexcite.Reloader.Monitor.VSIX.8fc9a4b2-5cca-40ca-9c70-29a16578e0b6" Version="1.2.0" Language="en-US" Publisher="Codexcite SA de CV" />
         <DisplayName>Codexcite.Reloader.Monitor.VSIX</DisplayName>
         <Description xml:space="preserve">Codexcite Reloader Monitor - monitors changes to Xamarin Forms .xaml files and updates the UI for running apps without the need for a rebuild and redeploy.
 To be used together with Codexcite.Reloader.Forms (http://www.nuget.org/packages/Codexcite.Reloader.Forms).
