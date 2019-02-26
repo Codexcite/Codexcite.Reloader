@@ -9,7 +9,7 @@
 		<local:MainViewModel></local:MainViewModel>
 	</ContentPage.BindingContext>-->
 	<StackLayout>
-		<Label Text="Welcome to Xamarin.Forms!xcaaaaa"
+		<Label Text="Welcome to Xamarin.Forms!"
            HorizontalOptions="Center" BackgroundColor="BlanchedAlmond" TextColor="Crimson"
            VerticalOptions="CenterAndExpand" />
 		<Label Text="{Binding Path=InstanceCount}"  

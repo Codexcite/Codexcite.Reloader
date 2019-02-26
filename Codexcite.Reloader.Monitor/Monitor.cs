@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
@@ -31,24 +32,63 @@ namespace Codexcite.Reloader.Monitor
 				TimeSpan.FromMilliseconds(300),
 			});
 		private Server _server;
+		private IDisposable _fileMonitorSubscription;
+
+		public event EventHandler<EventArgs<string>> ClientConnected;
+		public event EventHandler<EventArgs<string>> ClientDisconnected;
+		public event EventHandler<EventArgs<string>> Error;
+		protected virtual void OnClientConnected(string data)
+		{
+			ClientConnected?.Invoke(this, new EventArgs<string>(data));
+		}
+
+		protected virtual void OnClientDisconnected(string data)
+		{
+			ClientDisconnected?.Invoke(this, new EventArgs<string>(data));
+		}
+		protected virtual void OnError(string data)
+		{
+			Error?.Invoke(this, new EventArgs<string>(data));
+		}
+
+		public void Stop()
+		{
+			_server?.Stop();
+			_fileMonitorSubscription?.Dispose();
+		}
 
 		public bool Start(string path, string host, int port)
 		{
 			var actualHost = host ?? GetDefaultPrivateNetworkIp();
-			Console.WriteLine($"Starting host on '{actualHost}:{port}'.");
+			Debug.WriteLine($"Starting host on '{actualHost}:{port}'.");
 			_server = new Server();
 			var serverStarted = _server.Start(actualHost, port);
+			if (!serverStarted)
+			{
+				_server.Dispose();
+				_server = null;
+				return false;
+			}
+			Debug.WriteLine($"Running on '{actualHost}:{port}'.");
 
-			Console.WriteLine($"Running on '{actualHost}:{port}'.");
+			_server.ClientConnected += (sender, args) => OnClientConnected(args.Data);
+			_server.ClientDisconnected += (sender, args) => OnClientDisconnected(args.Data);
+			_server.Error += (sender, args) => OnError(args.Data);
 
 			var fileMonitorObservable = GetFileMonitorObservable(path);
-				fileMonitorObservable?.Subscribe(SendFileUpdate);
+			if (fileMonitorObservable != null)
+			{
+				_fileMonitorSubscription = fileMonitorObservable.Subscribe(SendFileUpdate);
+				return true;
+			}
 
-			var fileMonitorStarted = fileMonitorObservable != null;
-			return fileMonitorStarted && serverStarted;
+			_server?.Stop();
+			_server.Dispose();
+			_server = null;
+			return false;
 		}
 
-		private static string GetDefaultPrivateNetworkIp()
+		public static string GetDefaultPrivateNetworkIp()
 		{
 			return NetworkInterface
 							 .GetAllNetworkInterfaces()
@@ -59,15 +99,16 @@ namespace Codexcite.Reloader.Monitor
 							 .FirstOrDefault(x => x.ToString() != "127.0.0.1")?.ToString() ?? "127.0.0.1";
 		}
 
-		private static IObservable<string> GetFileMonitorObservable(string path)
+		private IObservable<string> GetFileMonitorObservable(string path)
 		{
 			if (!Directory.Exists(path))
 			{
-				Console.WriteLine("Invalid folder to monitor. Use '-p [path] command argument to set folder path.'");
+				Debug.WriteLine("Invalid folder to monitor. Use '-p [path] command argument to set folder path.'");
+				OnError($"Invalid folder to monitor. '{path}' is not a valid path.'");
 				return null;
 			}
 
-			Console.WriteLine($"Watching folder: '{path}'");
+			Debug.WriteLine($"Watching folder: '{path}'");
 			IObservable<string> result = null;
 			foreach (var fileExtension in SupportedFileExtensions)
 			{
@@ -105,29 +146,29 @@ namespace Codexcite.Reloader.Monitor
 
 		private async void SendFileUpdate(string filePath)
 		{
-			Console.WriteLine($"{DateTime.Now:HH:mm:ss.fff} - File updated: '{filePath}'");
+			Debug.WriteLine($"{DateTime.Now:HH:mm:ss.fff} - File updated: '{filePath}'");
 			try
 			{
 				string fileContent = RetryPolicy.Execute(() => File.ReadAllText(filePath));
 
 				if (fileContent.Length == 0)
 				{
-					Console.WriteLine($"Empty file");
+					Debug.WriteLine($"Empty file");
 					return;
 				}
 
 				var data = Encoding.UTF8.GetBytes(fileContent);
 				if (data == null || data.Length == 0)
 				{
-					Console.WriteLine($"Empty file");
+					Debug.WriteLine($"Empty file");
 					return;
 				}
-				Console.WriteLine($"Sending: {data.Length} bytes from file '{filePath}'.");
+				Debug.WriteLine($"Sending: {data.Length} bytes from file '{filePath}'.");
 				await _server.SendMessageToAllAsync(data);
 			}
 			catch (Exception e)
 			{
-				Console.WriteLine($"ERROR: {e}.");
+				Debug.WriteLine($"ERROR: {e}.");
 			}
 		}
 	}

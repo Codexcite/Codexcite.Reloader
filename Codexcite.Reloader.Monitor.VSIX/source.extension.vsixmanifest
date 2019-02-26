@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+    <Metadata>
+        <Identity Id="Codexcite.Reloader.Monitor.VSIX.8fc9a4b2-5cca-40ca-9c70-29a16578e0b6" Version="1.1.0" Language="en-US" Publisher="Vladimir Horbovanu" />
+        <DisplayName>Codexcite.Reloader.Monitor.VSIX</DisplayName>
+        <Description xml:space="preserve">Codexcite Reloader Monitor - monitors changes to Xamarin Forms .xaml files and updates the UI for running apps without the need for a rebuild and redeploy.
+To be used together with Codexcite.Reloader.Forms (http://www.nuget.org/packages/Codexcite.Reloader.Forms).
+</Description>
+        <MoreInfo>https://github.com/vladhorby/Codexcite.Reloader</MoreInfo>
+        <License>LICENSE.txt</License>
+        <GettingStartedGuide>https://github.com/vladhorby/Codexcite.Reloader</GettingStartedGuide>
+        <Icon>codexcite_blue_transparent 320x129.png</Icon>
+        <PreviewImage>VS start dialog.png.jpg</PreviewImage>
+        <Tags>Xamarin, Xamarin.Forms, LiveReload</Tags>
+    </Metadata>
+    <Installation>
+        <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[15.0, 16.0)" />
+    </Installation>
+    <Dependencies>
+        <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="[4.5,)" />
+        <Dependency Id="Microsoft.VisualStudio.MPF.15.0" DisplayName="Visual Studio MPF 15.0" d:Source="Installed" Version="[15.0]" />
+    </Dependencies>
+    <Prerequisites>
+        <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[15.0,16.0)" DisplayName="Visual Studio core editor" />
+    </Prerequisites>
+    <Assets>
+        <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
+    </Assets>
+</PackageManifest>

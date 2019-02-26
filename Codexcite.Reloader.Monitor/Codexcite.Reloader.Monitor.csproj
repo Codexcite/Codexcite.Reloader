@@ -2,6 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <SignAssembly>true</SignAssembly>
+    <DelaySign>false</DelaySign>
+    <AssemblyOriginatorKeyFile>Codexcite.Reloader.Monitor.key.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Polly" Version="7.0.3" />
