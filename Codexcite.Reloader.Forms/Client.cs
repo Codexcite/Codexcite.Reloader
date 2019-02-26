@@ -71,6 +71,8 @@ namespace Codexcite.Reloader.Forms
 			string message = null;
 			try
 			{
+				if (_client == null)
+					await Start();
 				if (!_client.Connected)
 				{
 					Debug.WriteLine("Disconnected...");
@@ -131,7 +133,6 @@ namespace Codexcite.Reloader.Forms
 			_isConnecting = false;
 			Connected = true;
 
-			//_client.Client.Poll()
 			Debug.WriteLine($"Connected... {_client.Client.Handle}");
 		}
 
