@@ -14,6 +14,7 @@ namespace Codexcite.Reloader.Forms
 {
 	public static class Reloader
 	{
+		private const string PING = "PING";
 		private static CancellationTokenSource _reloaderCancellationTokenSource;
 		private static readonly Dictionary<string, string> _cachedUpdatedPages = new Dictionary<string, string>();
 		private static bool _isManuallyReappearing = false;
@@ -34,6 +35,7 @@ namespace Codexcite.Reloader.Forms
 			_reloaderCancellationTokenSource = new CancellationTokenSource();
 			Application.Current.PageAppearing += ApplicationOnPageAppearing;
 
+			
 			Debug.WriteLine($"Reloader: Connecting to '{host}:{port}'.");
 
 			_client = new Client(host, port, true);
@@ -65,6 +67,12 @@ namespace Codexcite.Reloader.Forms
 				Debug.WriteLine("Reloader: Received empty xaml.");
 				return;
 			}
+			if (xaml == PING)
+			{
+				Debug.WriteLine("Reloader: Received PING.");
+				return;
+			}
+
 			var xamlClass = xaml.ExtractClassName();
 			Debug.WriteLine($"Reloader: Received xaml for '{xamlClass}'.'");
 			UpdateCachedPage(xamlClass, xaml);
@@ -127,7 +135,12 @@ namespace Codexcite.Reloader.Forms
 
 		private static void ApplicationOnPageAppearing(object sender, Page e)
 		{
-			_currentPage = e is NavigationPage navigationPage ? navigationPage.CurrentPage : e;
+			if (e is NavigationPage navigationPage)
+			{
+				_currentPage = navigationPage.CurrentPage;
+			}
+			else
+				_currentPage = e;
 			if (!_isManuallyReappearing)
 			{
 				var updatedXaml = GetCachedPageXaml(_currentPage.GetType().FullName);

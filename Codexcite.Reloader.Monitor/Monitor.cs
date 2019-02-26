@@ -6,6 +6,7 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Reactive.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Polly;
 using Polly.Retry;
 
@@ -60,7 +61,7 @@ namespace Codexcite.Reloader.Monitor
 		public bool Start(string path, string host, int port)
 		{
 			var actualHost = host ?? GetDefaultPrivateNetworkIp();
-			Debug.WriteLine($"Starting host on '{actualHost}:{port}'.");
+			Trace.WriteLine($"Starting host on '{actualHost}:{port}'.");
 			_server = new Server();
 			var serverStarted = _server.Start(actualHost, port);
 			if (!serverStarted)
@@ -69,7 +70,7 @@ namespace Codexcite.Reloader.Monitor
 				_server = null;
 				return false;
 			}
-			Debug.WriteLine($"Running on '{actualHost}:{port}'.");
+			Trace.WriteLine($"Running on '{actualHost}:{port}'.");
 
 			_server.ClientConnected += (sender, args) => OnClientConnected(args.Data);
 			_server.ClientDisconnected += (sender, args) => OnClientDisconnected(args.Data);
@@ -78,12 +79,14 @@ namespace Codexcite.Reloader.Monitor
 			var fileMonitorObservable = GetFileMonitorObservable(path);
 			if (fileMonitorObservable != null)
 			{
-				_fileMonitorSubscription = fileMonitorObservable.Subscribe(SendFileUpdate);
+				_fileMonitorSubscription = fileMonitorObservable
+					.Select(SendFileUpdate)
+					.Subscribe();
 				return true;
 			}
 
 			_server?.Stop();
-			_server.Dispose();
+			_server?.Dispose();
 			_server = null;
 			return false;
 		}
@@ -103,12 +106,12 @@ namespace Codexcite.Reloader.Monitor
 		{
 			if (!Directory.Exists(path))
 			{
-				Debug.WriteLine("Invalid folder to monitor. Use '-p [path] command argument to set folder path.'");
+				Trace.WriteLine("Invalid folder to monitor. Use '-p [path] command argument to set folder path.'");
 				OnError($"Invalid folder to monitor. '{path}' is not a valid path.'");
 				return null;
 			}
 
-			Debug.WriteLine($"Watching folder: '{path}'");
+			Trace.WriteLine($"Watching folder: '{path}'");
 			IObservable<string> result = null;
 			foreach (var fileExtension in SupportedFileExtensions)
 			{
@@ -144,31 +147,39 @@ namespace Codexcite.Reloader.Monitor
 			return result?.Throttle(TimeSpan.FromMilliseconds(100));
 		}
 
-		private async void SendFileUpdate(string filePath)
+		private async Task<bool> SendFileUpdate(string filePath)
 		{
-			Debug.WriteLine($"{DateTime.Now:HH:mm:ss.fff} - File updated: '{filePath}'");
+			Trace.WriteLine($"{DateTime.Now:HH:mm:ss.fff} - File updated: '{filePath}'");
 			try
 			{
+				if (_server.ConnectedClientsCount == 0)
+				{
+					Trace.WriteLine($"No clients connected, no action required");
+					return false;
+				}
+
 				string fileContent = RetryPolicy.Execute(() => File.ReadAllText(filePath));
 
 				if (fileContent.Length == 0)
 				{
-					Debug.WriteLine($"Empty file");
-					return;
+					Trace.WriteLine($"Empty file");
+					return false;
 				}
 
 				var data = Encoding.UTF8.GetBytes(fileContent);
 				if (data == null || data.Length == 0)
 				{
-					Debug.WriteLine($"Empty file");
-					return;
+					Trace.WriteLine($"Empty file");
+					return false;
 				}
-				Debug.WriteLine($"Sending: {data.Length} bytes from file '{filePath}'.");
+				Trace.WriteLine($"Sending: {data.Length} bytes from file '{filePath}'.");
 				await _server.SendMessageToAllAsync(data);
+				return true;
 			}
 			catch (Exception e)
 			{
-				Debug.WriteLine($"ERROR: {e}.");
+				Trace.WriteLine($"ERROR: {e}.");
+				return false;
 			}
 		}
 	}

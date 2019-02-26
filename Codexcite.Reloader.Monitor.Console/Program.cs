@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 
 namespace Codexcite.Reloader.Monitor.Console
@@ -7,6 +8,9 @@ namespace Codexcite.Reloader.Monitor.Console
 	{
 		static void Main(string[] args)
 		{
+			TextWriterTraceListener myWriter = new 
+				TextWriterTraceListener(System.Console.Out);
+			Trace.Listeners.Add(myWriter);
 			var path = args.GetCommandLineArgument("-path", Environment.CurrentDirectory);
 			var host = args.GetCommandLineArgument("-host", null);
 			int.TryParse(args.GetCommandLineArgument("-port", "5500"), out int port);

@@ -89,6 +89,8 @@ namespace Codexcite.Reloader.Forms
 					await _client.GetStream().ReadAsync(messageBuffer, 0, messageBuffer.Length);
 
 					message = Encoding.UTF8.GetString(messageBuffer, 0, messageBuffer.Length);
+
+
 				}
 			}
 			catch (Exception e)
@@ -128,11 +130,14 @@ namespace Codexcite.Reloader.Forms
 				!_cancellationTokenSource.IsCancellationRequested ? _client.ConnectAsync(_host, _port) : Task.CompletedTask);
 			_isConnecting = false;
 			Connected = true;
+
+			//_client.Client.Poll()
 			Debug.WriteLine($"Connected... {_client.Client.Handle}");
 		}
 
 		public void Dispose()
 		{
+			_client?.Client?.Disconnect(false);
 			_client?.Dispose();
 		}
 

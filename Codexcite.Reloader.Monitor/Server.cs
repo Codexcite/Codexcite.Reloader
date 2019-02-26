@@ -13,6 +13,7 @@ namespace Codexcite.Reloader.Monitor
 {
 	public class Server : IDisposable
 	{
+		private const string PING = "PING";
 		private TcpListener _tcpListener;
 		private readonly CompositeDisposable _compositeDisposable = new CompositeDisposable();
 		private readonly List<TcpClient> _connectedClients = new List<TcpClient>();
@@ -22,6 +23,8 @@ namespace Codexcite.Reloader.Monitor
 		public event EventHandler<EventArgs<string>> ClientConnected;
 		public event EventHandler<EventArgs<string>> ClientDisconnected;
 		public event EventHandler<EventArgs<string>> Error;
+
+		public int ConnectedClientsCount => _connectedClients.Count;
 
 		public void Stop()
 		{
@@ -43,16 +46,18 @@ namespace Codexcite.Reloader.Monitor
 					{
 						_connectedClients.Add(client);
 						client.DisposeWith(_compositeDisposable);
-						Debug.WriteLine($"Connected {client.Client.Handle}");
+						Trace.WriteLine($"Connected {client.Client.Handle}");
 						OnClientConnected(client.Client.Handle.ToString());
 					}, _cancellationTokenSource.Token);
 				//.DisposeWith(_compositeDisposable);
-
+				Observable.FromAsync(() => SendMessageToAllAsync(PING))
+					.RepeatAfterDelay(TimeSpan.FromSeconds(5))
+					.Subscribe(_cancellationTokenSource.Token);
 
 			}
 			catch (Exception e)
 			{
-				Debug.WriteLine(e);
+				Trace.WriteLine(e);
 				OnError(e.Message);
 				return false;
 			}
@@ -69,13 +74,13 @@ namespace Codexcite.Reloader.Monitor
 			{
 				if (!client.Connected)
 				{
-					Debug.WriteLine($"Disconnected {client.Client.Handle}");
+					Trace.WriteLine($"Disconnected {client.Client.Handle}");
 					_connectedClients.Remove(client);
 					OnClientDisconnected(client.Client.Handle.ToString());
 				}
 				else
 				{
-					Debug.WriteLine($"Sending to {client.Client.Handle} header length: {headerBytes.Length}, message length:{bytes.Length}");
+					Trace.WriteLine($"Sending to {client.Client.Handle} header length: {headerBytes.Length}, message length:{bytes.Length}");
 					try
 					{
 						await client.GetStream().WriteAsync(headerBytes, 0, headerBytes.Length);
@@ -83,7 +88,7 @@ namespace Codexcite.Reloader.Monitor
 					}
 					catch (Exception e)
 					{
-						Debug.WriteLine($"Disconnected {client.Client.Handle} - {e.Message}");
+						Trace.WriteLine($"Disconnected {client.Client.Handle} - {e.Message}");
 						_connectedClients.Remove(client);
 						OnClientDisconnected(client.Client.Handle.ToString());
 					}
@@ -101,6 +106,10 @@ namespace Codexcite.Reloader.Monitor
 			if (_isDisposed)
 				return;
 			_isDisposed = true;
+			foreach (var client in _connectedClients)
+			{
+				client.Client.Disconnect(false);
+			}
 			_tcpListener?.Stop();
 			_compositeDisposable?.Dispose();
 
@@ -119,5 +128,6 @@ namespace Codexcite.Reloader.Monitor
 		{
 			Error?.Invoke(this, new EventArgs<string>(data));
 		}
+
 	}
 }

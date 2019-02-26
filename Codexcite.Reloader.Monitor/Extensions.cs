@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Reactive.Concurrency;
+using System.Reactive.Linq;
 using System.Text.RegularExpressions;
 
 namespace Codexcite.Reloader.Monitor
@@ -15,5 +17,26 @@ namespace Codexcite.Reloader.Monitor
 
 		public static string ExtractClassName(this string xaml)
 			=> Regex.Match(xaml, "x:Class=\"(.+)\"").Groups[1].Value;
+
+		public static IObservable<T> RepeatAfterDelay<T>(this IObservable<T> source, TimeSpan delay, IScheduler scheduler)
+		{
+			var repeatSignal = Observable
+				.Empty<T>()
+				.Delay(delay, scheduler);
+
+			// when source finishes, wait for the specified
+			// delay, then repeat.
+			return source.Concat(repeatSignal).Repeat();
+		}
+		public static IObservable<T> RepeatAfterDelay<T>(this IObservable<T> source, TimeSpan delay)
+		{
+			var repeatSignal = Observable
+				.Empty<T>()
+				.Delay(delay);
+
+			// when source finishes, wait for the specified
+			// delay, then repeat.
+			return source.Concat(repeatSignal).Repeat();
+		}
 	}
 }
