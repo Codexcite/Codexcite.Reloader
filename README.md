@@ -14,10 +14,10 @@ Similar to Xamarin LiveReload that unfortunately was discontinued and stopped wo
 Acts as a TCP server and monitors a specific folder (and sub-folders) for changes to .xaml files. Sends update notifications to the connected clients upon file changes.
 __Update: now the [Visual Studio extension](https://marketplace.visualstudio.com/items?itemName=CodexciteSAdeCV.ReloaderMonitor) is available, check below for details.__
 * Download and build the project
-* Open command line at the Codexcite.Reloader.Monitor\bin\[platform] location
+* Open command line at the Codexcite.Reloader.Monitor.Console\bin\[platform] location
 * Run the program
 ```
-dotnet .\Codexcite.Reloader.Monitor.dll -path [PATH] -host [HOST] -port [PORT]
+dotnet .\Codexcite.Reloader.Monitor.Console.dll -path [PATH] -host [HOST] -port [PORT]
 ```
 #### Parameters:
 * -path : the folder containing the .xaml files to be monitored. Default: Environment.CurrentDirectory
