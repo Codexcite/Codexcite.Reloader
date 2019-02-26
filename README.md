@@ -63,7 +63,7 @@ public App()
   ![Sample GIF](Extra/Screenshots/app.xaml_example.gif?raw=true)
   * __UPDATE 1.1.0 Removed dependency on SignalR, using a simple TcpListener / TcpClient connection now.__
 
-### Reload Monitor Visual Studio extension
+### Codexcite.Reloader.Monitor Visual Studio extension
 * Download the [.vsix](Extra/VSIX/Codexcite.Reloader.Monitor.VSIX.vsix?raw=true) file or download and build the .VSIX project.
 * Install in Visual Studio
 * (Optional) [Enable the Reload Monitor toolbar](Extra/Screenshots/VS_enable_toolbar.jpg?raw=true)
