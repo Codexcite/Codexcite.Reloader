@@ -3,7 +3,7 @@
 Lightweight library for "live reloading" XAML pages in Xamarin.Forms on Android, UWP and iOS.
 Allows simultaneous updating of multiple connected clients - great if you need to see the impact of your changes instantly on different platforms.
 
-![Sample GIF](Extra/Screenshots/simultaneous_xaml_example.gif?raw=true)
+![Sample GIF](https://github.com/vladhorby/Codexcite.Reloader/blob/master/Extra/Screenshots/simultaneous_xaml_example.gif?raw=true)
 
 Similar to Xamarin LiveReload that unfortunately was discontinued and stopped working for me after updating to Xamarin.Forms 3.5.
 
@@ -60,18 +60,18 @@ public App()
   * Upon updating the xaml for the page, the Page.Dissapearing and Page.Appearing events are forced triggered, so any initial setup code you have in the page code behind can be run again. Worked well with ReactiveUI WhenActivated.
   * Only handled the NavigationPage with ContentPages case so far, still pending for other Page types.
   * __UPDATE 1.0.2 Now also handling updates for the App.xaml Resources, like control styles.__
-  ![Sample GIF](Extra/Screenshots/app.xaml_example.gif?raw=true)
+  ![Sample GIF](https://github.com/vladhorby/Codexcite.Reloader/blob/master/Extra/Screenshots/app.xaml_example.gif?raw=true)
   * __UPDATE 1.1.0 Removed dependency on SignalR, using a simple TcpListener / TcpClient connection now.__
 
 ### Codexcite.Reloader.Monitor Visual Studio extension
-* Download from [the MS Marketplace](https://marketplace.visualstudio.com/items?itemName=CodexciteSAdeCV.ReloaderMonitor), or use the [local .vsix file](Extra/VSIX/Codexcite.Reloader.Monitor.VSIX.vsix?raw=true), or download and build the .VSIX project.
+* Download from [the MS Marketplace](https://marketplace.visualstudio.com/items?itemName=CodexciteSAdeCV.ReloaderMonitor), or use the [local .vsix file](https://github.com/vladhorby/Codexcite.Reloader/blob/master/Extra/VSIX/Codexcite.Reloader.Monitor.VSIX.vsix?raw=true), or download and build the .VSIX project.
 * Install in Visual Studio
-* (Optional) [Enable the Reload Monitor toolbar](Extra/Screenshots/VS_enable_toolbar.jpg?raw=true)
-* Start the Reloader Monitor from the [Tools menu option](Extra/Screenshots/VS_tools_menu.jpg?raw=true) or from the [Toolbar option](Extra/Screenshots/VS_toolbar_button.jpg?raw=true).
+* (Optional) [Enable the Reload Monitor toolbar](https://github.com/vladhorby/Codexcite.Reloader/blob/master/Extra/Screenshots/VS_enable_toolbar.jpg?raw=true)
+* Start the Reloader Monitor from the [Tools menu option](https://github.com/vladhorby/Codexcite.Reloader/blob/master/Extra/Screenshots/VS_tools_menu.jpg?raw=true) or from the [Toolbar option](https://github.com/vladhorby/Codexcite.Reloader/blob/master/Extra/Screenshots/VS_toolbar_button.jpg?raw=true).
 * Select the path to the .xaml files to be monitored. Choose your server IP and port. 
-![Start dialog](Extra/Screenshots/VS_start_dialog.jpg?raw=true)
+![Start dialog](https://github.com/vladhorby/Codexcite.Reloader/blob/master/Extra/Screenshots/VS_start_dialog.jpg?raw=true)
 * Click "Start". You'll be able to see notifications about client connections in the Output -> Debug window. 
-![Output window](Extra/Screenshots/VS_output_window.jpg?raw=true)
+![Output window](https://github.com/vladhorby/Codexcite.Reloader/blob/master/Extra/Screenshots/VS_output_window.jpg?raw=true)
 * Run your apps, making sure you use the same IP and port for Reloader.Init().
 
 ### License
