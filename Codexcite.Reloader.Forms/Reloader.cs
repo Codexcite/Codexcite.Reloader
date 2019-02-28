@@ -3,10 +3,12 @@ using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
@@ -22,10 +24,13 @@ namespace Codexcite.Reloader.Forms
 
 		private static Page _currentPage;
 		private static Client _client;
+		private static IDisposable _subscription;
+		private static Task _task;
 
 		public static void Stop()
 		{
 			_reloaderCancellationTokenSource?.Cancel();
+			_subscription?.Dispose();
 		}
 
 		public static void Init(string host, int port)
@@ -35,16 +40,48 @@ namespace Codexcite.Reloader.Forms
 			_reloaderCancellationTokenSource = new CancellationTokenSource();
 			Application.Current.PageAppearing += ApplicationOnPageAppearing;
 
-			
+
 			Debug.WriteLine($"Reloader: Connecting to '{host}:{port}'.");
 
-			_client = new Client(host, port, true);
+			_client = new Client(host, port, _reloaderCancellationTokenSource.Token, true);
 
-			Observable.FromAsync(_client.ReadMessage)
-				.Repeat()
-				.TakeUntil(x => x == null)
-				.Subscribe(HandleReceivedXaml);
 
+			//_task = Task.Run(async () =>
+			//		{
+			//			do
+			//			{
+			//				var message = await _client.ReadMessage();
+			//				HandleReceivedXaml(message);
+			//				Debug.WriteLine($"Reloader: '{Thread.CurrentThread.Name}' id:{Thread.CurrentThread.ManagedThreadId} pool:{Thread.CurrentThread.IsBackground}  state:{Thread.CurrentThread.ThreadState}");
+			//			} while (true);
+			//		}, _reloaderCancellationTokenSource.Token);
+
+
+			//_subscription = Observable.FromAsync(_client.ReadMessage)
+			//	.Repeat()
+			//	.Publish().RefCount()
+			//	//.TakeUntil(x => x == null)
+			//	//.ObserveOn(Scheduler.Default)
+			//	.Subscribe(HandleReceivedXaml,
+			//		exception =>
+			//		{
+			//			Debug.WriteLine($"Reloader: Exception '{exception.Message}'.");
+			//		},
+			//		() =>
+			//		{
+			//			Debug.WriteLine($"Reloader: DONE!'.");
+			//		});
+
+			_subscription = _client.ReadMessageObservable
+				.Subscribe(HandleReceivedXaml,
+					exception =>
+					{
+						Debug.WriteLine($"Reloader: Exception '{exception.Message}'.");
+					},
+					() =>
+					{
+						Debug.WriteLine($"Reloader: DONE!'.");
+					});
 		}
 
 		private static void HandleReceivedXaml(byte[] contents)
@@ -58,7 +95,7 @@ namespace Codexcite.Reloader.Forms
 			var xaml = Encoding.UTF8.GetString(contents);
 			HandleReceivedXaml(xaml);
 		}
-	
+
 
 		private static void HandleReceivedXaml(string xaml)
 		{
