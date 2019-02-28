@@ -25,7 +25,6 @@ namespace Codexcite.Reloader.Forms
 		private static Page _currentPage;
 		private static Client _client;
 		private static IDisposable _subscription;
-		private static Task _task;
 
 		public static void Stop()
 		{
@@ -43,34 +42,7 @@ namespace Codexcite.Reloader.Forms
 
 			Debug.WriteLine($"Reloader: Connecting to '{host}:{port}'.");
 
-			_client = new Client(host, port, _reloaderCancellationTokenSource.Token, true);
-
-
-			//_task = Task.Run(async () =>
-			//		{
-			//			do
-			//			{
-			//				var message = await _client.ReadMessage();
-			//				HandleReceivedXaml(message);
-			//				Debug.WriteLine($"Reloader: '{Thread.CurrentThread.Name}' id:{Thread.CurrentThread.ManagedThreadId} pool:{Thread.CurrentThread.IsBackground}  state:{Thread.CurrentThread.ThreadState}");
-			//			} while (true);
-			//		}, _reloaderCancellationTokenSource.Token);
-
-
-			//_subscription = Observable.FromAsync(_client.ReadMessage)
-			//	.Repeat()
-			//	.Publish().RefCount()
-			//	//.TakeUntil(x => x == null)
-			//	//.ObserveOn(Scheduler.Default)
-			//	.Subscribe(HandleReceivedXaml,
-			//		exception =>
-			//		{
-			//			Debug.WriteLine($"Reloader: Exception '{exception.Message}'.");
-			//		},
-			//		() =>
-			//		{
-			//			Debug.WriteLine($"Reloader: DONE!'.");
-			//		});
+			_client = new Client(host, port, _reloaderCancellationTokenSource.Token);
 
 			_subscription = _client.ReadMessageObservable
 				.Subscribe(HandleReceivedXaml,
@@ -106,7 +78,7 @@ namespace Codexcite.Reloader.Forms
 			}
 			if (xaml == PING)
 			{
-				Debug.WriteLine("Reloader: Received PING.");
+				//Debug.WriteLine("Reloader: Received PING.");
 				return;
 			}
 

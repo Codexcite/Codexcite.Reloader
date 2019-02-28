@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Net;
+using System.Net.Sockets;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Text.RegularExpressions;
@@ -37,6 +39,11 @@ namespace Codexcite.Reloader.Monitor
 			// when source finishes, wait for the specified
 			// delay, then repeat.
 			return source.Concat(repeatSignal).Repeat();
+		}
+		public static string EssentialInfoAsString(this TcpClient client)
+		{
+			return
+				$"{client?.Client?.Handle} - {(client?.Client?.RemoteEndPoint as IPEndPoint)?.Address}:{(client?.Client?.RemoteEndPoint as IPEndPoint)?.Port}";
 		}
 	}
 }

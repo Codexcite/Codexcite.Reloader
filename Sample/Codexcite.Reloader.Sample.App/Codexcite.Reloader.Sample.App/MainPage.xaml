@@ -12,6 +12,9 @@
 		<Label Text="Welcome to Xamarin.Forms!"
            HorizontalOptions="Center" BackgroundColor="BlanchedAlmond" TextColor="Crimson"
            VerticalOptions="CenterAndExpand" />
+		<Label Text="Welcome to Xamarin.Forms!"
+		HorizontalOptions="Center" BackgroundColor="BlanchedAlmond" TextColor="Crimson"
+		VerticalOptions="CenterAndExpand" />
 		<Label Text="{Binding Path=InstanceCount}"  
                HorizontalOptions="Center" 
                VerticalOptions="CenterAndExpand" />

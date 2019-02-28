@@ -46,8 +46,8 @@ namespace Codexcite.Reloader.Monitor
 					{
 						_connectedClients.Add(client);
 						client.DisposeWith(_compositeDisposable);
-						Trace.WriteLine($"Connected {client.Client.Handle}");
-						OnClientConnected(client.Client.Handle.ToString());
+						Trace.WriteLine($"Connected {client.EssentialInfoAsString()}");
+						OnClientConnected(client);
 					}, _cancellationTokenSource.Token);
 				//.DisposeWith(_compositeDisposable);
 				Observable.FromAsync(() => SendMessageToAllAsync(PING))
@@ -74,13 +74,13 @@ namespace Codexcite.Reloader.Monitor
 			{
 				if (!client.Connected)
 				{
-					Trace.WriteLine($"Disconnected {client.Client.Handle}");
+					Trace.WriteLine($"Disconnected {client.EssentialInfoAsString()}");
 					_connectedClients.Remove(client);
-					OnClientDisconnected(client.Client.Handle.ToString());
+					OnClientDisconnected(client);
 				}
 				else
 				{
-					Trace.WriteLine($"Sending to {client.Client.Handle} header length: {headerBytes.Length}, message length:{bytes.Length}");
+					Trace.WriteLine($"Sending to {client.EssentialInfoAsString()} header length: {headerBytes.Length}, message length:{bytes.Length}");
 					try
 					{
 						await client.GetStream().WriteAsync(headerBytes, 0, headerBytes.Length);
@@ -88,9 +88,9 @@ namespace Codexcite.Reloader.Monitor
 					}
 					catch (Exception e)
 					{
-						Trace.WriteLine($"Disconnected {client.Client.Handle} - {e.Message}");
+						Trace.WriteLine($"Disconnected {client.EssentialInfoAsString()} - {e.Message}");
 						_connectedClients.Remove(client);
-						OnClientDisconnected(client.Client.Handle.ToString());
+						OnClientDisconnected(client);
 					}
 				}
 			}
@@ -115,14 +115,14 @@ namespace Codexcite.Reloader.Monitor
 
 		}
 
-		protected virtual void OnClientConnected(string data)
+		protected virtual void OnClientConnected(TcpClient client)
 		{
-			ClientConnected?.Invoke(this, new EventArgs<string>(data));
+			ClientConnected?.Invoke(this, new EventArgs<string>(client.EssentialInfoAsString()));
 		}
 
-		protected virtual void OnClientDisconnected(string data)
+		protected virtual void OnClientDisconnected(TcpClient client)
 		{
-			ClientDisconnected?.Invoke(this, new EventArgs<string>(data));
+			ClientDisconnected?.Invoke(this, new EventArgs<string>(client.EssentialInfoAsString()));
 		}
 		protected virtual void OnError(string data)
 		{

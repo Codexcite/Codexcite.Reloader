@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Polly;
 using Polly.Retry;
+using Xamarin.Forms;
 
 namespace Codexcite.Reloader.Forms
 {
@@ -26,128 +27,94 @@ namespace Codexcite.Reloader.Forms
 		private readonly CancellationToken _cancellationToken;
 		private readonly string _host;
 		private readonly int _port;
-		private readonly bool _autoReconnect;
 
 		public bool Connected => _client?.Connected ?? false;
 		public IObservable<string> ReadMessageObservable { get; private set; }
 
-		public Client(string host, int port, CancellationToken cancellationToken, bool autoReconnect = true)
+		public Client(string host, int port, CancellationToken cancellationToken)
 		{
 			_host = host;
 			_port = port;
-			_autoReconnect = autoReconnect;
 			_cancellationToken = cancellationToken;
 
 			ReadMessageObservable = Observable.Interval(TimeSpan.FromMilliseconds(500))
-				.Select(iteration => Observable.FromAsync(()=>DoLoop(iteration)))
+				.Select(DoLoop)
 				.Concat()
 				.Where(x => x != null)
+				.TakeUntil(_ => cancellationToken.IsCancellationRequested)
 				.Publish().RefCount();
-
-
 		}
 
-		private async Task<string> DoLoop(long iterationCount)
+		private IObservable<string> DoLoop(long iterationCount)
 		{
-			if (!Connected || iterationCount % 60 == 0)
-				await DoConnect();
-			if (_client.Available > 0)
-				return await DoReadMessage();
-			return null;
-		}
-		
-		public void Stop()
-		{
-			//_cancellationTokenSource.Cancel();
-		}
-		public async Task<bool> Start()
-		{
-			try
-			{
-				await DoConnect();
-			}
-			catch (Exception e)
-			{
-				Debug.WriteLine(e);
-				return false;
-			}
+			var result = Observable.If(() => !Connected || 
+																			((Device.RuntimePlatform == Device.iOS || Device.RuntimePlatform == Device.Android) 
+																				&& iterationCount % 60 == 0),
+																	Observable.FromAsync(DoConnect))
+															.Select(_ => (string) null)
+															.Concat(Observable.While(() => _client.Available > 0, 
+																											Observable.FromAsync(DoReadMessage)));
 
-			return true;
-		}
+			return result;
 
-		public async Task<string> ReadMessage()
-		{
-			string message = null;
-			try
-			{
-				//if (_client?.Client != null)
-				//{
-				//	_client.Client.Disconnect(true);
-				//	await _client.Client.ConnectAsync(_host, _port);
-				//}
-				if (_client == null)
-					await Start().ConfigureAwait(false);
-				if (!Connected)
-				{
-					Debug.WriteLine("Disconnected...");
-				}
-				else
-				{
-					message = await DoReadMessage();
-				}
-			}
-			catch (Exception e)
-			{
-				Debug.WriteLine($"Exception while trying to ReadMessage: {e.Message}");
-			}
-
-			if (message == null && !Connected && _autoReconnect)
-			{
-				await Start();
-				return Connected ? await ReadMessage() : null;
-			}
-
-			return message;
 		}
 
 		private async Task<string> DoReadMessage()
 		{
-			var header = new byte[4];
-			Debug.WriteLine(
-				$"ReadMessage: start reading header '{Thread.CurrentThread.Name}' id:{Thread.CurrentThread.ManagedThreadId} pool:{Thread.CurrentThread.IsBackground}  state:{Thread.CurrentThread.ThreadState}");
-			await _client.GetStream().ReadAsync(header, 0, header.Length, _cancellationToken).ConfigureAwait(false);
+			try
+			{
+				if (!Connected || _client.Available == 0)
+					return null;
+				var header = new byte[4];
+				//Debug.WriteLine(
+				//	$"ReadMessage: start reading header '{Thread.CurrentThread.Name}' id:{Thread.CurrentThread.ManagedThreadId} pool:{Thread.CurrentThread.IsBackground}  state:{Thread.CurrentThread.ThreadState}");
+				await _client.GetStream().ReadAsync(header, 0, header.Length, _cancellationToken).ConfigureAwait(false);
 
-			var messageLength = BitConverter.ToInt32(header, 0);
-			Debug.WriteLine($"ReadMessage: end reading header {messageLength}");
-			if (messageLength <= 0)
-				throw new Exception($"Invalid message length in header: {messageLength}");
+				var messageLength = BitConverter.ToInt32(header, 0);
+				//Debug.WriteLine($"ReadMessage: end reading header {messageLength}");
+				if (messageLength <= 0)
+					throw new Exception($"Invalid message length in header: {messageLength}");
 
-			var messageBuffer = new byte[messageLength];
-			Debug.WriteLine($"ReadMessage: start reading message");
-			await _client.GetStream().ReadAsync(messageBuffer, 0, messageBuffer.Length, _cancellationToken).ConfigureAwait(false);
+				var messageBuffer = new byte[messageLength];
+				//Debug.WriteLine($"ReadMessage: start reading message");
+				await _client.GetStream().ReadAsync(messageBuffer, 0, messageBuffer.Length, _cancellationToken).ConfigureAwait(false);
 
-			var message = Encoding.UTF8.GetString(messageBuffer, 0, messageBuffer.Length);
-			Debug.WriteLine($"ReadMessage: end reading message {message.Length}");
-			return message;
+				var message = Encoding.UTF8.GetString(messageBuffer, 0, messageBuffer.Length);
+				//Debug.WriteLine($"ReadMessage: end reading message {message.Length}");
+				return message;
+			}
+			catch (Exception e)
+			{
+				Debug.WriteLine($"Exception while trying to ReadMessage: {e.Message}");
+				return null;
+			}
 		}
 
 		private bool _isConnecting;
 
 		private async Task DoConnect()
 		{
-			if (_isConnecting || _cancellationToken.IsCancellationRequested)
-				return;
-			_isConnecting = true;
-			if (_client != null)
-				_client.Client.Disconnect(true);
-			else 
-				_client = new TcpClient { ExclusiveAddressUse = false };
-			
-			await RetryPolicy.ExecuteAsync(() =>
-				!_cancellationToken.IsCancellationRequested ? _client.ConnectAsync(_host, _port) : Task.CompletedTask);
-			_isConnecting = false;
+			try
+			{
+				if (_isConnecting || _cancellationToken.IsCancellationRequested)
+					return;
+				_isConnecting = true;
+				if (_client != null)
+					_client.Client.Disconnect(true);
+				else
+					_client = new TcpClient { ExclusiveAddressUse = false };
 
-			Debug.WriteLine($"Connected... {((IPEndPoint)_client.Client.LocalEndPoint).Address}:{((IPEndPoint)_client.Client.LocalEndPoint).Port}");
+				await RetryPolicy.ExecuteAsync(() =>
+					!_cancellationToken.IsCancellationRequested ? _client.ConnectAsync(_host, _port) : Task.CompletedTask);
+				_isConnecting = false;
+
+				Debug.WriteLine($"Connected... {_client.EssentialLocalInfoAsString()}");
+			}
+			catch (Exception e)
+			{
+				Debug.WriteLine($"Exception while trying to DoConnect: {e.Message}");
+				throw;
+			}
 		}
 
 		public void Dispose()
