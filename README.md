@@ -34,6 +34,18 @@ Runs inside the Xamarin.Forms app, connects to the Codexcite.Reloader.Monitor se
 ```
 <PackageReference Condition="'$(Configuration)'=='Debug'" Include="Codexcite.Reloader.Forms" Version="1.2.1" />
 ```
+* On Android, if you get a build error *Can not resolve reference: `System.Threading.Tasks.Extensions`, referenced by `System.Reactive`*, it is a [known issue](https://github.com/dotnet/reactive/issues/803#issuecomment-450520889) when referencing a .Net Standard 2.0 library that uses System.Reactive. Fix: add this to your Android .csproj file:
+```
+  <ItemGroup>
+    ... other package references here
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.Threading.Tasks.Extensions">
+    <HintPath>$(UserProfile)\.nuget\packages\system.threading.tasks.extensions\4.5.2\lib\netstandard2.0\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+```
 * Initialize the Reloader in your Xamarin.Forms.Application, using the same url that you configured for the Codexcite.Reloader.Monitor.
 ```csharp
 public App()
@@ -50,19 +62,6 @@ public App()
 ```
 * On the UWP project, enable the "Private Networks (Client and Server)" capability in the Package.appxmanifest. 
 
-### Remarks
-* Tested on UWP and Android so far, but it should work on iOS too.
-* The Xaml updating is pretty basic so far:
-  * ~~Only handles updates for the current page, ignores updates for other pages.~~
-  * Navigating back keeps the changes to the previous page. Page1 (original) -> Page1 (modified) -> Page2 ->back-> Page1 (modified)
-  * ~~Navigating operations that recreate pages will load the original versions of those pages. Page1 -> Page2 (original) -> Page2 (modified) ->back-> Page1 -> Page2 (original)~~
-  * __UPDATE 1.0.1 Now handling updates to other pages and caching the updated xaml for future reuse.__
-  * Upon updating the xaml for the page, the Page.Dissapearing and Page.Appearing events are forced triggered, so any initial setup code you have in the page code behind can be run again. Worked well with ReactiveUI WhenActivated.
-  * Only handled the NavigationPage with ContentPages case so far, still pending for other Page types.
-  * __UPDATE 1.0.2 Now also handling updates for the App.xaml Resources, like control styles.__
-  ![Sample GIF](https://github.com/vladhorby/Codexcite.Reloader/blob/master/Extra/Screenshots/app.xaml_example.gif?raw=true)
-  * __UPDATE 1.1.0 Removed dependency on SignalR, using a simple TcpListener / TcpClient connection now.__
-
 ### Codexcite.Reloader.Monitor Visual Studio extension
 * Download from [the MS Marketplace](https://marketplace.visualstudio.com/items?itemName=CodexciteSAdeCV.ReloaderMonitor), or use the [local .vsix file](https://github.com/vladhorby/Codexcite.Reloader/blob/master/Extra/VSIX/Codexcite.Reloader.Monitor.VSIX.vsix?raw=true), or download and build the .VSIX project.
 * Install in Visual Studio
@@ -73,6 +72,18 @@ public App()
 * Click "Start". You'll be able to see notifications about client connections in the Output -> Debug window. 
 ![Output window](https://github.com/vladhorby/Codexcite.Reloader/blob/master/Extra/Screenshots/VS_output_window.jpg?raw=true)
 * Run your apps, making sure you use the same IP and port for Reloader.Init().
+
+
+### Remarks
+* Tested on UWP and Android so far, but it should work on iOS too.
+* The Xaml updating is pretty basic so far:
+  * __UPDATE 1.0.1 Now handling updates to other pages and caching the updated xaml for future reuse.__
+  * Upon updating the xaml for the page, the Page.Dissapearing and Page.Appearing events are forced triggered, so any initial setup code you have in the page code behind can be run again. Worked well with ReactiveUI WhenActivated.
+  * Only handled the NavigationPage with ContentPages case so far, still pending for other Page types.
+  * __UPDATE 1.0.2 Now also handling updates for the App.xaml Resources, like control styles.__
+  ![Sample GIF](https://github.com/vladhorby/Codexcite.Reloader/blob/master/Extra/Screenshots/app.xaml_example.gif?raw=true)
+  * __UPDATE 1.1.0 Removed dependency on SignalR, using a simple TcpListener / TcpClient connection now.__
+  * __UPDATE 1.2.2 Having problems keeping the TcpClient's Socket alive on Android (it dies after ~1 minute, even with pinging going on every 5 seconds. Fixed for now by forcing a reconnect every 30 seconds. Help on this would be appreciated.__
 
 ### License
 The MIT License (MIT) see [License file](LICENSE)
