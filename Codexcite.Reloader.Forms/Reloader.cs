@@ -91,6 +91,8 @@ namespace Codexcite.Reloader.Forms
 				Device.BeginInvokeOnMainThread(() =>
 				{
 					Debug.WriteLine($"Reloader: Updating the App.xaml resources.'");
+					if (!IsValidXaml<Application>(xaml))
+						return;
 					Application.Current.Resources.Clear();
 					Application.Current.LoadFromXaml(xaml);
 				});
@@ -107,7 +109,8 @@ namespace Codexcite.Reloader.Forms
 			Device.BeginInvokeOnMainThread(() =>
 			{
 				Debug.WriteLine($"Reloader: Updating current page '{_currentPage.GetType().FullName}'.'");
-
+				if (!IsValidXaml<ContentPage>(xaml))
+					return;
 				contentPage.Content = null;
 				contentPage.LoadFromXaml(xaml);
 				ReassignNamedElements(contentPage);
@@ -120,13 +123,27 @@ namespace Codexcite.Reloader.Forms
 					// second option, using reflection to raise the events
 					//contentPage.Raise(typeof(Page), nameof(Page.Disappearing), EventArgs.Empty);
 					//contentPage.Raise(typeof(Page), nameof(Page.Appearing), EventArgs.Empty);
-
 				}
 				finally
 				{
 					_isManuallyReappearing = false;
 				}
 			});
+		}
+
+		private static bool IsValidXaml<TView>(string xaml) where TView:new()
+		{
+			try
+			{
+				new TView().LoadFromXaml(xaml);
+			}
+			catch (Exception e)
+			{
+				Debug.WriteLine($"Reloader: received invalid xaml: {e.Message}.");
+				return false;
+			}
+
+			return true;
 		}
 
 		private static void ReassignNamedElements(Element element)

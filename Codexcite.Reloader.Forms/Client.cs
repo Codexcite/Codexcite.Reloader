@@ -47,13 +47,15 @@ namespace Codexcite.Reloader.Forms
 
 		private IObservable<string> DoLoop(long iterationCount)
 		{
-			var result = Observable.If(() => !Connected || 
-																			((Device.RuntimePlatform == Device.iOS || Device.RuntimePlatform == Device.Android) 
-																				&& iterationCount % 60 == 0),
+			var result = Observable.If(() => !Connected
+																			 || ((Device.RuntimePlatform == Device.iOS || Device.RuntimePlatform == Device.Android)
+																						&& iterationCount % 60 == 0),
 																	Observable.FromAsync(DoConnect))
-															.Select(_ => (string) null)
-															.Concat(Observable.While(() => _client.Available > 0, 
+															.Select(_ => (string)null)
+															.Concat(Observable
+																			.While(() => _client.Available > 0,
 																											Observable.FromAsync(DoReadMessage)));
+			//.Concat(Observable.Return((string) null).Delay(TimeSpan.FromMilliseconds(500)));
 
 			return result;
 
