@@ -15,8 +15,11 @@ To be used together with the Codexcite.Reloader.Monitor.
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageTags>Xamarin, Xamarin.Forms, Xaml, LiveReload</PackageTags>
 	  <PackageLicenseExpression>MIT</PackageLicenseExpression>
-	  <AssemblyVersion>1.2.3.0</AssemblyVersion>
-	  <PackageReleaseNotes>1.2.3
+	  <AssemblyVersion>1.2.4.0</AssemblyVersion>
+	  <PackageReleaseNotes>1.2.4
+Switched to a backup / rollback solution for invalid xaml.
+
+1.2.3
 Added XAML validation before updating the page.
 
 1.2.2
@@ -36,7 +39,7 @@ Now also handling updates for the App.xaml Resources, like control styles.
 
 1.0.1
 Updating all pages, not just the current one. Latest page xaml is cached and used for future page navigation.</PackageReleaseNotes>
-	  <Version>1.2.3</Version>
+	  <Version>1.2.4</Version>
 	  <PackageLicenseUrl></PackageLicenseUrl>
   </PropertyGroup>
 

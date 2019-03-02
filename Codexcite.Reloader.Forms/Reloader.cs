@@ -91,10 +91,28 @@ namespace Codexcite.Reloader.Forms
 				Device.BeginInvokeOnMainThread(() =>
 				{
 					Debug.WriteLine($"Reloader: Updating the App.xaml resources.'");
-					if (!IsValidXaml<Application>(xaml))
-						return;
+					//if (!IsValidXaml<Application>(xaml))
+					//	return;
+					var backupResources = new ResourceDictionary();
+					foreach (var res in Application.Current.Resources)
+					{
+						backupResources.Add(res.Key, res.Value);
+					}
 					Application.Current.Resources.Clear();
-					Application.Current.LoadFromXaml(xaml);
+					try
+					{
+						Application.Current.LoadFromXaml(xaml);
+					}
+					catch (Exception e)
+					{
+						Console.WriteLine($"Error while loading resources, rolling back. {e.Message}");
+						Application.Current.Resources.Clear();
+						foreach (var res in backupResources)
+						{
+							Application.Current.Resources.Add(res.Key, res.Value);
+						}
+					}
+
 				});
 			}
 			else if (_currentPage != null && _currentPage is ContentPage contentPage)
@@ -109,11 +127,27 @@ namespace Codexcite.Reloader.Forms
 			Device.BeginInvokeOnMainThread(() =>
 			{
 				Debug.WriteLine($"Reloader: Updating current page '{_currentPage.GetType().FullName}'.'");
-				if (!IsValidXaml<ContentPage>(xaml))
-					return;
+				//if (!IsValidXaml<ContentPage>(xaml))
+				//	return;
+				var backupContent = contentPage.Content;
+				var backupToolbar = new List<ToolbarItem>(contentPage.ToolbarItems);
 				contentPage.Content = null;
-				contentPage.LoadFromXaml(xaml);
-				ReassignNamedElements(contentPage);
+				contentPage.ToolbarItems.Clear();
+				try
+				{
+					contentPage.LoadFromXaml(xaml);
+					ReassignNamedElements(contentPage);
+				}
+				catch (Exception e)
+				{
+					Console.WriteLine($"Error while updating page xaml, rolling back. {e.Message}");
+					contentPage.Content = backupContent;
+					contentPage.ToolbarItems.Clear();
+					foreach (var toolbarItem in backupToolbar) 
+						contentPage.ToolbarItems.Add(toolbarItem);
+					ReassignNamedElements(contentPage);
+					return;
+				}
 				try
 				{
 					_isManuallyReappearing = true;
@@ -131,7 +165,7 @@ namespace Codexcite.Reloader.Forms
 			});
 		}
 
-		private static bool IsValidXaml<TView>(string xaml) where TView:new()
+		private static bool IsValidXaml<TView>(string xaml) where TView : new()
 		{
 			try
 			{

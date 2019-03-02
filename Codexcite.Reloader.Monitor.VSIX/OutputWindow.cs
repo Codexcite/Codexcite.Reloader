@@ -11,6 +11,7 @@ namespace Codexcite.Reloader.Monitor.VSIX
 {
 	public static class OutputWindow
 	{
+		private static bool _isFirstTime = true;
 		public static void Write(string message)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
@@ -21,7 +22,11 @@ namespace Codexcite.Reloader.Monitor.VSIX
 			generalPane?.OutputString(Environment.NewLine);
 			generalPane?.OutputString(message);
 			generalPane?.OutputString(Environment.NewLine);
-			generalPane?.Activate();
+			if (_isFirstTime)
+			{
+				_isFirstTime = false;
+				generalPane?.Activate();
+			}
 		}
 	}
 }
