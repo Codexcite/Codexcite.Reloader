@@ -44,10 +44,10 @@ Updating all pages, not just the current one. Latest page xaml is cached and use
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Polly" Version="7.0.3" />
+    <PackageReference Include="Polly" Version="7.1.0" />
     <PackageReference Include="System.Reactive" Version="4.1.3" />
     
-    <PackageReference Include="Xamarin.Forms" Version="3.5.0.169047" />
+    <PackageReference Include="Xamarin.Forms" Version="3.6.0.264807" />
   </ItemGroup>
 
 </Project>
